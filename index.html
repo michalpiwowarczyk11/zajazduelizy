@@ -659,9 +659,11 @@
     }
 
     .calendar-day.past {
-      background: #eee7dc;
-      color: rgba(16,37,31,.28);
+      background: #ebe4d8;
+      color: rgba(16,37,31,.24);
       text-decoration: line-through;
+      opacity: .72;
+      cursor: not-allowed;
     }
 
     .calendar-day.busy {
@@ -1189,7 +1191,7 @@
             </div>
           </div>
         </div>
-        <div class="map-placeholder"><iframe src="https://maps.google.com/maps?q=Czajowice&t=&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0; min-height:460px; border-radius:28px;" allowfullscreen="" loading="lazy"></iframe></div>
+        <div class="map-placeholder"><iframe src="https://maps.google.com/maps?q=Zajazd%20u%20Elizy%20Czajowice&t=&z=15&ie=UTF8&iwloc=near&output=embed" width="100%" height="100%" style="border:0; min-height:460px; border-radius:28px;" allowfullscreen="" loading="lazy"></iframe></div>
         </div>
       </div>
     </section>
@@ -1254,6 +1256,20 @@
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayString = formatDate(today);
+
+    function lockPastInputs() {
+      if (!arrivalInput || !departureInput) return;
+      arrivalInput.setAttribute('min', todayString);
+      departureInput.setAttribute('min', todayString);
+
+      if (arrivalInput.value && new Date(arrivalInput.value + 'T00:00:00') < today) {
+        arrivalInput.value = todayString;
+      }
+
+      if (departureInput.value && new Date(departureInput.value + 'T00:00:00') < today) {
+        departureInput.value = todayString;
+      }
+    }
     const arrivalInput = document.getElementById('arrival');
     const departureInput = document.getElementById('departure');
     const calendarTitle = document.getElementById('calendarTitle');
@@ -1355,6 +1371,7 @@
 
         if (date < today) {
           cell.classList.add('past');
+          cell.setAttribute('title', 'Termin miniony');
         }
 
         if (busyDates.includes(dateString)) {
@@ -1384,10 +1401,10 @@
     }
 
     if (arrivalInput && departureInput) {
-      arrivalInput.min = todayString;
-      departureInput.min = todayString;
+      lockPastInputs();
 
       arrivalInput.addEventListener('change', () => {
+        lockPastInputs();
         if (arrivalInput.value) {
           visibleMonth = new Date(arrivalInput.value + 'T00:00:00');
           visibleMonth.setDate(1);
@@ -1395,7 +1412,10 @@
         renderCalendar();
       });
 
-      departureInput.addEventListener('change', renderCalendar);
+      departureInput.addEventListener('change', () => {
+        lockPastInputs();
+        renderCalendar();
+      });
     }
 
     if (bookingForm) {
