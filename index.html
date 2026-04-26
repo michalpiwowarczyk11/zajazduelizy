@@ -168,6 +168,14 @@
       z-index: 20;
       padding: 18px 0;
       background: linear-gradient(to bottom, rgba(13, 31, 26, .78), rgba(13, 31, 26, .18), transparent);
+      transition: padding var(--transition), background var(--transition), box-shadow var(--transition), backdrop-filter var(--transition);
+    }
+
+    .nav.scrolled {
+      padding: 10px 0;
+      background: rgba(13, 31, 26, .92);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 14px 44px rgba(0,0,0,.22);
     }
 
     .nav-inner {
@@ -180,13 +188,23 @@
     .brand {
       color: var(--white);
       font-family: "Playfair Display", serif;
-      font-size: 26px;
+      font-size: 39px;
       font-weight: 700;
       letter-spacing: -.03em;
     }
 
     .brand span {
       color: var(--gold-500);
+    }
+
+    .brand {
+      transition: transform var(--transition), letter-spacing var(--transition), font-size var(--transition);
+    }
+
+    .nav.scrolled .brand {
+      transform: scale(.86);
+      transform-origin: left center;
+      letter-spacing: -.045em;
     }
 
     .nav-links {
@@ -235,6 +253,20 @@
 
     .hero-content {
       padding: 150px 0 120px;
+      animation: heroReveal 1.1s ease both;
+    }
+
+    @keyframes heroReveal {
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+        filter: blur(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
     }
 
     .hero p {
@@ -282,6 +314,25 @@
 
     section {
       padding: 112px 0;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(34px);
+      transition: opacity 800ms ease, transform 800ms ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .service-card,
+    .review,
+    .gallery-grid img,
+    .intro-photo img,
+    .experience-images img {
+      will-change: transform;
     }
 
     .intro {
@@ -1004,7 +1055,7 @@
       </div>
     </section>
 
-    <section class="intro">
+    <section class="intro reveal">
       <div class="container intro-grid">
         <div class="intro-text">
           <span class="eyebrow">Miejsce z charakterem</span>
@@ -1023,7 +1074,7 @@
       </div>
     </section>
 
-    <section class="services" id="noclegi">
+    <section class="services reveal" id="noclegi">
       <div class="container">
         <div class="section-head">
           <div>
@@ -1064,7 +1115,7 @@
       </div>
     </section>
 
-    <section class="experience" id="atrakcje">
+    <section class="experience reveal" id="atrakcje">
       <div class="container experience-grid">
         <div class="experience-images">
           <img src="https://zajazduelizy.pl/sites/default/files/styles/max_1300x1300/public/colorbox/dolina2.jpg?itok=iiYF2NSj" alt="Las i szlak turystyczny" />
@@ -1085,7 +1136,7 @@
       </div>
     </section>
 
-    <section class="gallery" aria-label="Galeria">
+    <section class="gallery reveal" aria-label="Galeria">
       <div class="container">
         <span class="eyebrow">Galeria</span>
         <h2>Klimat, który pracuje na pierwsze wrażenie.</h2>
@@ -1099,7 +1150,7 @@
       </div>
     </section>
 
-    <section class="reviews">
+    <section class="reviews reveal">
       <div class="container reviews-grid">
         <div>
           <span class="eyebrow">Opinie gości</span>
@@ -1121,7 +1172,7 @@
       </div>
     </section>
 
-    <section class="location" id="kontakt">
+    <section class="location reveal" id="kontakt">
       <div class="container location-grid">
         <div class="location-card">
           <span class="eyebrow">Kontakt i rezerwacja</span>
@@ -1199,7 +1250,7 @@
       </div>
     </section>
 
-    <section class="cta">
+    <section class="cta reveal">
       <div class="container">
         <div class="cta-box">
           <div>
@@ -1444,6 +1495,31 @@
     }
 
     renderCalendar();
+
+    const nav = document.querySelector('.nav');
+    const revealElements = document.querySelectorAll('.reveal');
+
+    function updateNav() {
+      if (!nav) return;
+      if (window.scrollY > 40) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    }
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    revealElements.forEach((element) => revealObserver.observe(element));
+    window.addEventListener('scroll', updateNav, { passive: true });
+    updateNav();
   </script>
 </body>
 </html>
