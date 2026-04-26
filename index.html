@@ -658,6 +658,12 @@
       background: transparent;
     }
 
+    .calendar-day.past {
+      background: #eee7dc;
+      color: rgba(16,37,31,.28);
+      text-decoration: line-through;
+    }
+
     .calendar-day.busy {
       background: #d9d2c4;
       color: rgba(16,37,31,.46);
@@ -1121,7 +1127,7 @@
           <p>Skontaktuj się z nami i zarezerwuj swój pobyt.</p>
           <ul class="location-list">
             <li><span>Telefon</span><strong>+48 664 737 011</strong></li>
-            <li><span>E-mail</span><strong>kontakt@zajazduelizy.pl</strong></li>
+            <li><span>E-mail</span><strong>michal.piwowarczyk11@gmail.com</strong></li>
             <li><span>Lokalizacja</span><strong>Czajowice, okolice Ojcowa</strong></li>
           </ul>
 
@@ -1176,7 +1182,7 @@
               <div class="calendar-days" id="calendarDays"></div>
               <div class="calendar-legend">
                 <span><i></i>Dostępne</span>
-                <span><i class="busy-dot"></i>Zajęte</span>
+                <span><i class="busy-dot"></i>Zajęte / minione</span>
                 <span><i class="selected-dot"></i>Wybrany termin</span>
               </div>
               <div class="availability-message" id="availabilityMessage">Wybierz datę przyjazdu i wyjazdu, aby sprawdzić dostępność.</div>
@@ -1222,7 +1228,7 @@
           <h4>Rezerwacja</h4>
           <div class="footer-links">
             <a href="tel:+48000000000">+48 664 737 011</a>
-            <a href="mailto:kontakt@zajazduelizy.pl">kontakt@zajazduelizy.pl</a>
+            <a href="mailto:michal.piwowarczyk11@gmail.com">michal.piwowarczyk11@gmail.com</a>
           </div>
         </div>
         <div>
@@ -1245,6 +1251,9 @@
     ];
 
     const bookingForm = document.getElementById('bookingForm');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayString = formatDate(today);
     const arrivalInput = document.getElementById('arrival');
     const departureInput = document.getElementById('departure');
     const calendarTitle = document.getElementById('calendarTitle');
@@ -1289,6 +1298,12 @@
       if (!arrivalInput.value || !departureInput.value) {
         availabilityMessage.className = 'availability-message';
         availabilityMessage.textContent = 'Wybierz datę przyjazdu i wyjazdu, aby sprawdzić dostępność.';
+        return;
+      }
+
+      if (new Date(arrivalInput.value + 'T00:00:00') < today) {
+        availabilityMessage.className = 'availability-message error';
+        availabilityMessage.textContent = 'Nie można wybrać daty wcześniejszej niż dzisiejsza.';
         return;
       }
 
@@ -1338,6 +1353,10 @@
         cell.className = 'calendar-day';
         cell.textContent = day;
 
+        if (date < today) {
+          cell.classList.add('past');
+        }
+
         if (busyDates.includes(dateString)) {
           cell.classList.add('busy');
         }
@@ -1365,6 +1384,9 @@
     }
 
     if (arrivalInput && departureInput) {
+      arrivalInput.min = todayString;
+      departureInput.min = todayString;
+
       arrivalInput.addEventListener('change', () => {
         if (arrivalInput.value) {
           visibleMonth = new Date(arrivalInput.value + 'T00:00:00');
@@ -1379,6 +1401,11 @@
     if (bookingForm) {
       bookingForm.addEventListener('submit', function(event) {
         event.preventDefault();
+
+        if (new Date(arrivalInput.value + 'T00:00:00') < today) {
+          alert('Nie można wybrać daty wcześniejszej niż dzisiejsza.');
+          return;
+        }
 
         if (new Date(departureInput.value) <= new Date(arrivalInput.value)) {
           alert('Data wyjazdu musi być późniejsza niż data przyjazdu.');
@@ -1424,7 +1451,7 @@
 '
         );
 
-        window.location.href = 'mailto:kontakt@zajazduelizy.pl?subject=' + subject + '&body=' + body;
+        window.location.href = 'mailto:michal.piwowarczyk11@gmail.com?subject=' + subject + '&body=' + body;
       });
     }
 
