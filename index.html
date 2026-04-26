@@ -640,6 +640,28 @@
       line-height: 1.5;
     }
 
+    .form-status {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .form-status.success {
+      display: block;
+      background: #e7f3e8;
+      color: #1f5c31;
+    }
+
+    .form-status.error {
+      display: block;
+      background: #f4ded8;
+      color: #7b2d1f;
+    }
+
     .availability-calendar {
       margin-top: 24px;
       padding: 22px;
@@ -1190,6 +1212,9 @@
               <input type="hidden" name="_subject" value="Zapytanie rezerwacyjne — Zajazd u Elizy">
               <input type="hidden" name="_captcha" value="false">
               <input type="hidden" name="_template" value="table">
+              <label class="full">Imię i nazwisko
+                <input type="text" id="guestName" name="Imię i nazwisko" placeholder="Imię i nazwisko" required>
+              </label>
               <label>Przyjazd
                 <input type="date" id="arrival" name="Data przyjazdu" required>
               </label>
@@ -1215,13 +1240,14 @@
                 </select>
               </label>
               <label class="full">Telefon kontaktowy
-                <input type="tel" id="guestPhone" name="Telefon kontaktowy" placeholder="Twój numer telefonu">
+                <input type="tel" id="guestPhone" name="Telefon kontaktowy" placeholder="Twój numer telefonu" required>
               </label>
               <label class="full">Wiadomość
                 <textarea id="message" name="Wiadomość" placeholder="Dodatkowe informacje, preferencje pokoju, godzina przyjazdu..."></textarea>
               </label>
-              <button class="btn btn-primary full" type="submit">Wyślij zapytanie</button>
+              <button class="btn btn-primary full" id="bookingSubmit" type="submit">Wyślij zapytanie</button>
             </form>
+            <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
             <p class="booking-note">Formularz przygotuje gotową wiadomość e-mail. Rezerwacja jest potwierdzona dopiero po kontakcie z obiektem.</p>
 
             <div class="availability-calendar" aria-label="Kalendarz dostępności">
@@ -1326,6 +1352,8 @@
     }
     const arrivalInput = document.getElementById('arrival');
     const departureInput = document.getElementById('departure');
+    const formStatus = document.getElementById('formStatus');
+    const bookingSubmit = document.getElementById('bookingSubmit');
     const calendarTitle = document.getElementById('calendarTitle');
     const calendarDays = document.getElementById('calendarDays');
     const availabilityMessage = document.getElementById('availabilityMessage');
@@ -1472,24 +1500,67 @@
       });
     }
 
+    function showFormStatus(type, message) {
+      if (!formStatus) return;
+      formStatus.className = 'form-status ' + type;
+      formStatus.textContent = message;
+    }
+
     if (bookingForm) {
-      bookingForm.addEventListener('submit', function(event) {
+      bookingForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        showFormStatus('', '');
+
         if (new Date(arrivalInput.value + 'T00:00:00') < today) {
-          event.preventDefault();
-          alert('Nie można wybrać daty wcześniejszej niż dzisiejsza.');
+          showFormStatus('error', 'Nie można wybrać daty wcześniejszej niż dzisiejsza.');
           return;
         }
 
         if (new Date(departureInput.value) <= new Date(arrivalInput.value)) {
-          event.preventDefault();
-          alert('Data wyjazdu musi być późniejsza niż data przyjazdu.');
+          showFormStatus('error', 'Data wyjazdu musi być późniejsza niż data przyjazdu.');
           return;
         }
 
         if (rangeHasBusyDate()) {
-          event.preventDefault();
-          alert('Wybrany termin obejmuje zajęty dzień. Wybierz inny zakres dat.');
+          showFormStatus('error', 'Wybrany termin obejmuje zajęty dzień. Wybierz inny zakres dat.');
           return;
+        }
+
+        if (!bookingForm.checkValidity()) {
+          bookingForm.reportValidity();
+          return;
+        }
+
+        const originalButtonText = bookingSubmit ? bookingSubmit.textContent : '';
+
+        try {
+          if (bookingSubmit) {
+            bookingSubmit.disabled = true;
+            bookingSubmit.textContent = 'Wysyłanie...';
+          }
+
+          const response = await fetch(bookingForm.action, {
+            method: 'POST',
+            body: new FormData(bookingForm),
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (response.ok) {
+            bookingForm.reset();
+            lockPastInputs();
+            renderCalendar();
+            showFormStatus('success', 'Dziękujemy. Formularz został wysłany poprawnie. Skontaktujemy się w sprawie potwierdzenia rezerwacji.');
+          } else {
+            showFormStatus('error', 'Formularz nie został wysłany. Spróbuj ponownie albo skontaktuj się telefonicznie: +48 664 737 011.');
+          }
+        } catch (error) {
+          showFormStatus('error', 'Formularz nie został wysłany. Sprawdź połączenie internetowe albo skontaktuj się telefonicznie: +48 664 737 011.');
+        } finally {
+          if (bookingSubmit) {
+            bookingSubmit.disabled = false;
+            bookingSubmit.textContent = originalButtonText;
+          }
         }
       });
     }
