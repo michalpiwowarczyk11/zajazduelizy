@@ -1135,15 +1135,18 @@
 
           <div class="booking-box" id="rezerwacja">
             <h3>Zapytanie rezerwacyjne</h3>
-            <form class="booking-form" id="bookingForm">
+            <form class="booking-form" id="bookingForm" action="https://formsubmit.co/michal.piwowarczyk11@gmail.com" method="POST">
+              <input type="hidden" name="_subject" value="Zapytanie rezerwacyjne — Zajazd u Elizy">
+              <input type="hidden" name="_captcha" value="false">
+              <input type="hidden" name="_template" value="table">
               <label>Przyjazd
-                <input type="date" id="arrival" required>
+                <input type="date" id="arrival" name="Data przyjazdu" required>
               </label>
               <label>Wyjazd
-                <input type="date" id="departure" required>
+                <input type="date" id="departure" name="Data wyjazdu" required>
               </label>
               <label>Goście
-                <select id="guests" required>
+                <select id="guests" name="Liczba gości" required>
                   <option value="1 osoba">1 osoba</option>
                   <option value="2 osoby" selected>2 osoby</option>
                   <option value="3 osoby">3 osoby</option>
@@ -1152,7 +1155,7 @@
                 </select>
               </label>
               <label>Rodzaj pobytu
-                <select id="stayType" required>
+                <select id="stayType" name="Rodzaj pobytu" required>
                   <option value="Nocleg">Nocleg</option>
                   <option value="Nocleg z wellness">Nocleg z wellness</option>
                   <option value="Restauracja">Restauracja</option>
@@ -1161,10 +1164,10 @@
                 </select>
               </label>
               <label class="full">Telefon kontaktowy
-                <input type="tel" id="guestPhone" placeholder="Twój numer telefonu">
+                <input type="tel" id="guestPhone" name="Telefon kontaktowy" placeholder="Twój numer telefonu">
               </label>
               <label class="full">Wiadomość
-                <textarea id="message" placeholder="Dodatkowe informacje, preferencje pokoju, godzina przyjazdu..."></textarea>
+                <textarea id="message" name="Wiadomość" placeholder="Dodatkowe informacje, preferencje pokoju, godzina przyjazdu..."></textarea>
               </label>
               <button class="btn btn-primary full" type="submit">Wyślij zapytanie</button>
             </form>
@@ -1420,58 +1423,23 @@
 
     if (bookingForm) {
       bookingForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-
         if (new Date(arrivalInput.value + 'T00:00:00') < today) {
+          event.preventDefault();
           alert('Nie można wybrać daty wcześniejszej niż dzisiejsza.');
           return;
         }
 
         if (new Date(departureInput.value) <= new Date(arrivalInput.value)) {
+          event.preventDefault();
           alert('Data wyjazdu musi być późniejsza niż data przyjazdu.');
           return;
         }
 
         if (rangeHasBusyDate()) {
+          event.preventDefault();
           alert('Wybrany termin obejmuje zajęty dzień. Wybierz inny zakres dat.');
           return;
         }
-
-        const arrival = arrivalInput.value;
-        const departure = departureInput.value;
-        const guests = document.getElementById('guests').value;
-        const stayType = document.getElementById('stayType').value;
-        const guestPhone = document.getElementById('guestPhone').value;
-        const message = document.getElementById('message').value;
-
-        const subject = encodeURIComponent('Zapytanie rezerwacyjne — Zajazd u Elizy');
-        const body = encodeURIComponent(
-          'Dzień dobry,
-
-' +
-          'chcę zapytać o dostępność pobytu w Zajeździe u Elizy.
-
-' +
-          'Termin przyjazdu: ' + arrival + '
-' +
-          'Termin wyjazdu: ' + departure + '
-' +
-          'Liczba gości: ' + guests + '
-' +
-          'Rodzaj pobytu: ' + stayType + '
-' +
-          'Telefon kontaktowy: ' + guestPhone + '
-
-' +
-          'Wiadomość:
-' + message + '
-
-' +
-          'Proszę o informację zwrotną i potwierdzenie dostępności.
-'
-        );
-
-        window.location.href = 'mailto:michal.piwowarczyk11@gmail.com?subject=' + subject + '&body=' + body;
       });
     }
 
